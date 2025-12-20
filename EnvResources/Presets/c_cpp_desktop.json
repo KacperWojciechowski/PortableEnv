@@ -1,0 +1,21 @@
+{
+	"packages": [
+		"gcc",
+		"make",
+		"cmake",
+		"ninja",
+		"gdb",
+		"valgrind",
+		"clang",
+		"glibc",
+		"gtest",
+		"boost",
+		"perf",
+		"spdlog",
+		"qt6-base",
+		"gtk4",
+		"sdl2",
+		"wxwidgets",
+		"eigen"
+	]
+}

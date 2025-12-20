@@ -1,0 +1,11 @@
+{
+	"packages": [
+		"flake8",
+		"pytest",
+		"numpy",
+		"pandas",
+		"requests",
+		"matplotlib",
+		"scipy"
+	]
+}

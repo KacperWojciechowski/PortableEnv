@@ -1,0 +1,13 @@
+{
+	"packages": [
+		"clippy",
+		"rustfmt",
+		"cargo-nextest",
+		"cargo-tarpaulin",
+		"cargo-audit",
+		"cargo-watch",
+		"tokio",
+		"reqwest",
+		"rand"
+	]
+}

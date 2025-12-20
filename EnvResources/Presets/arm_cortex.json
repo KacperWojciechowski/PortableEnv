@@ -1,0 +1,17 @@
+{
+	"packages": [
+		"gcc",
+		"make",
+		"cmake",
+		"ninja",
+		"gdb",
+		"valgrind",
+		"clang",
+		"glibc",
+		"gtest",
+		"arm-none-eabi-gcc",
+		"openocd",
+		"stlink",
+		"Ceedling"
+	]
+}

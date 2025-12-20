@@ -11,7 +11,7 @@ GIT_USER="$1"
 
 VOLUME_NAME="dev_workspace"
 IMAGE_NAME="dev-arch"
-DOCKERFILE_PATH="./Dockerfile"
+DOCKERFILE_PATH="./EnvResources/Dockerfile"
 CONTEXT_DIR="."
 
 echo "Cleaning up dangling Docker volumes..."
@@ -29,9 +29,11 @@ else
 fi
 
 echo "Building Docker image '$IMAGE_NAME' from $DOCKERFILE_PATH..."
+
+# Temporarily forward ssh to allow for cloning during image build
 DOCKER_BUILDKIT=1 docker build \
 	--build-arg GIT_USER="$GIT_USER" \
-	--ssh default \ # temporarily forwards ssh to allow for cloning during image build
+	--ssh default \
 	-t "$IMAGE_NAME" \
 	-f "$DOCKERFILE_PATH" \
 	"$CONTEXT_DIR"
