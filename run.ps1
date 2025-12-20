@@ -27,10 +27,10 @@ if (-not $volumeExists) {
 	Write-Host "Docker volume '$VolumeName' found."
 }
 
-docker run -rm -it `
+docker run --rm -it `
 	-v "${VolumeName}:${ContainerWorkDir}" `
 	-v "${sshAgentPipe}:/ssh-agent" `
-	-s "SSH_AUTH_SOCK=/ssh-agent" `
+	-e "SSH_AUTH_SOCK=/ssh-agent" `
 	-w "${ContainerWorkDir}" `
 	$ImageName `
 	fish

@@ -2,6 +2,8 @@ FROM archlinux:latest
 
 # TODO: Reorganize the order of the instructions to minimize the re-building time
 
+ARG GIT_USER
+
 # Set the locale
 ENV LANG=en_US.UTF-8
 ENV LC_ALL=en_US.UTF-8
@@ -56,7 +58,7 @@ RUN echo "${USERNAME} ALL=(ALL) NOPASSWD: ALL" > /etc/sudoers.d/${USERNAME} && \
 RUN /tmp/install_optional.sh /tmp/config.json
 
 # Clone the repositories provided by the user
-RUN /tmp/clone_repos.sh /tmp/repos.json
+RUN --mount=type=ssh /tmp/clone_repos.sh /tmp/repos.js
 
 # SSH setup via agent forwarding
 RUN mkdir -p /home/$USERNAME && \
