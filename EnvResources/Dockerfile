@@ -1,5 +1,7 @@
 FROM archlinux:latest
 
+# TODO: Reorganize the order of the instructions to minimize the re-building time
+
 # Set the locale
 ENV LANG=en_US.UTF-8
 ENV LC_ALL=en_US.UTF-8
@@ -10,6 +12,11 @@ ENV STARSHIP_CONFIG=/etc/starship/starship.toml
 COPY ../config.json /tmp/config.json
 COPY container-scripts/Install_iotional.sh /tmp/install_optional.sh
 RUN chmod +x /tmp/install_optional.sh
+
+# Copy repository clone script
+COPY ../repos.json /tmp/repos.json
+COPY container-scripts/clone_repos.sh /tmp/clone_repos.sh
+RUN chmod +x /tmp/clone_repos.sh
 
 # Install dependencies
 RUN pacman -Syu --noconfirm && \
@@ -47,6 +54,9 @@ RUN echo "${USERNAME} ALL=(ALL) NOPASSWD: ALL" > /etc/sudoers.d/${USERNAME} && \
 
 # Install optional packages from config.json
 RUN /tmp/install_optional.sh /tmp/config.json
+
+# Clone the repositories provided by the user
+RUN /tmp/clone_repos.sh /tmp/repos.json
 
 # SSH setup via agent forwarding
 RUN mkdir -p /home/$USERNAME && \
