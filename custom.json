@@ -1,5 +1,5 @@
 {
-  "Custom": {
+  "packages": {
     "clang": true,
     "glibc": true,
     "make": true,
@@ -8,7 +8,6 @@
     "gdb": true,
     "valgrind": true,
     "strace": true,
-    "glibc": true,
     "CMock": true,
     "Ceedling": true,
     "meson": true,

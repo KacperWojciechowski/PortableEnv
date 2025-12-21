@@ -25,109 +25,91 @@ declare -A CUSTOM_PACKAGE_TYPE=(
 	[clippy]=rustup [rustfmt]=rustup
 )
 
-declare -A PRESET_PACKAGE_MAP=(
-	["C/C++ Desktop"]="gcc g++ make cmake ninja dbg valgrind clang \
-	       glibc gtest boost perf spdlog eigen qt6-base gtk4 sdl2 wxwidgets"
-	["Python"]="python python-pip flake8 pytest numpy pandas requests \
-	       matplotlib scipy"
-	["Ruby"]="ruby ruby-bundler minitest rails"
-	["ARM_Cortex"]="gcc g++ make cmake ninja dbg valgrind clang glibc gtest \
-	       arm-none-eabi-gcc openocd stlink ruby Ceedling"
-	["AVR"]="gcc g++ make cmake ninja dbg valgrind clang \
-	       glibc gtest avr-gcc avr-libc \
-	       avr-binutils avrdude simavr avarice"
-	["Rust"]="rustup clippy rustfmt cargo-nextest cargo-tarpaulin \
-	       cargo-audit cargo-watch tokio reqwest rand"
-	["CMock dev"]=""
-)
-
 PACMAN_PKGS=()
 PIP_PKGS=()
 GEM_PKGS=()
 CARGO_PKGS=()
 RUSTUP_PKGS=()
 
-add_pkg() {
-    local pkg="$1"
-    local type="${CUSTOM_PACKAGE_TYPE[$pkg]:-pacman}"
-
-    case "$type" in
-	    pacman) PACMAN_PKGS+=("$pkg") ;;
-	    pip) PIP_PKGS+=("$pkg") ;;
-	    gem) GEM_PKGS+=("$pkg") ;;
-	    cargo) CARGO_PKGS+=("$pkg") ;;
-	    rustup) RUSTUP_PKGS+=("$pkg") ;;
-    esac
-}
-
-echo "PRocessing presets..."
-
-mapfile -t ENABLED_PRESETS < <(
-	jq -r '.Presets | to_entries[] | select(.value==true) | .key' "$CONFIG_JSON"
-)
-
-for preset in "${ENABLED_PRESETS[@]}"; do
-	[[ "$preset" == "Custom" ]] && continue
-
-	pkgs="${PRESET_PACKAGE_MAP[$preset]}"
-	if [[ -z "$pkgs" ]]; then
-		echo "Warning: preset '$preset' has no package mapping"
-		continue
-	fi
-
-	for pkg in $pkgs; do
-		add_pkg "$pkg"
-	done
-done
-
-CUSTOM_ENABLED=$(jq -r '.Presets.Custom // false' "$CONFIG_JSON")
-
-if [[ "$CUSTOM_ENABLED" == "true" ]]; then
-	echo "Processing custom packages..."
-
-	mapfile -t CUSTOM_KEYS < <(
-		jq -r '.Custom | to_entries[] |
-			select(.key | test("^_") | not) |
-			select(.value==true) |
-			.key' "$CONFIG_JSON"
-	)
-
-	for pkg in "${CUSTOM_KEYS[@]}"; do
-		add_pkg "$pkg"
-	done
-fi
-
-[[ ${#PIP_PKGS[@]} -gt 0 ]] && pacman -S --noconfirm python python-pip
-[[ ${#GEM_PKGS[@]} -gt 0 ]] && pacman -S --noconfirm ruby
-[[ ${#CARGO_PKGS[@]} -gt 0 ]] && pacman -S --noconfirm rust
-[[ ${#RUSTUP_PKGS[@]} -gt 0 ]] && pacman -S --noconfirm rustup && rustup default stable
-
 install_packages() {
-	local type=$1; shift
+	local type=$1
+	shift
 	local pkgs=("$@")
 	[[ ${#pkgs[@]} -eq 0 ]] && return
 
-	echo "Installing $type packages: ${pkgs[*]}"
-
 	case "$type" in
-		pacman) pacman -S --needed --noconfirm "${pkgs[@]}" ;;
-		pip) pip install "${pkgs[@]}" ;;
-		gem) gem install "${pkgs[@]}" ;;
+		pacman)
+			echo "Installing pacman packages: ${pkgs[*]}"
+			pacman -S --needed --noconfirm "${pkgs[*]}"
+			;;
+		pip)
+			echo "Installing pip packages: ${pkgs[*]}"
+			pip install "${pkgs[*]}"
+			;;
+		gem)
+			echo "Installing Ruby gems: ${pkgs[*]}"
+			gem install "${pkgs[*]}"
+			;;
 		cargo)
-			for crate in "${pkgs[@]}"; do
+			echo "Installing Rust crates: ${pkgs[*]}"
+			for crate in "${pkgs[*]}"; do
 				cargo install "$crate" || true
 			done
 			;;
 		rustup)
-			rustup component add "${pkgs[@]}" ;;
+			echo "Installing rustup packages: ${pkgs[*]}"
+			for rustup_pkg in "${pkgs[*]}"; do
+				rustup component add "$rustup_pkg" || true
+			done
+			;;
 	esac
 }
+
+mapfile -t enabled_presets < <(jq -r '.Presets | to_entries[] | select(.value==true) | .key' "$CONFIG_JSON")
+
+for preset in "${enabled_presets[@]}"; do
+	preset_file="/tmp/presets/$(echo "$preset" | tr '[:upper:]' '[:lower:]' | tr ' /' '_' | tr '+' 'p').json"
+	if [[ ! -f "$preset_file" ]]; then
+		echo "Warning: Preset file $preset_file not found, skipping."
+		continue
+	fi
+
+	mapfile -t packages < <(
+		jq -r '
+		if (.packages | type) == "array" then
+			.packages[]
+		else
+			.packages | to_entries[] | select(.value==true) | .key
+		end
+		' "$preset_file" | sed '/^\s*$/d')
+	if [[ ${#packages[@]} -eq 0 ]]; then
+		echo "No packages found in $preset_file, skipping."
+		continue
+	fi
+	for pkg in "${packages[@]}"; do
+		[[ -z "$pkg" ]] && continue
+		type=${CUSTOM_PACKAGE_TYPE[$pkg]:-pacman}
+		case "$type" in
+			pacman) PACMAN_PKGS+=("$pkg") ;;
+			pip) PIP_PKGS+=("$pkg") ;;
+			gem) GEM_PKGS+=("$pkg") ;;
+			cargo) CARGO_PKGS+=("$pkg") ;;
+			rustup) RUSTUP_PKGS+=("$pkg") ;;
+		esac
+	done
+	echo "Packages to install from preset $preset_file: ${packages[*]}"
+done
+
+[[ ${#PIP_PKGS[@]} -gt 0 ]] && pacman -S --needed --noconfirm python-pip
+[[ ${#GEM_PKGS[@]} -gt 0 ]] && pacman -S --needed --noconfirm ruby
+[[ ${#CARGO_PKGS[@]} -gt 0 ]] && pacman -S --needed --noconfirm rustup && rustup default stable
+[[ ${#RUSTUP_PKGS[@]} -gt 0 ]] && pacman -S --needed --noconfirm rustup && rustup default stable
 
 install_packages pacman "${PACMAN_PKGS[@]}"
 install_packages pip "${PIP_PKGS[@]}"
 install_packages gem "${GEM_PKGS[@]}"
 install_packages cargo "${CARGO_PKGS[@]}"
-install_packages rustup "${CARGO_PKGS[@]}"
+install_packages rustup "${RUSTUP_PKGS[@]}"
 
 echo "All requested packages installed successfully"
 pacman -Scc --noconfirm

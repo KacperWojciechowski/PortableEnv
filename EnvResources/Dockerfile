@@ -8,7 +8,7 @@ ENV LC_ALL=en_US.UTF-8
 ENV TERM=xterm-256color
 ENV STARSHIP_CONFIG=/etc/starship/starship.toml
 
-# Instal basic ddependencies for the system
+# Install basic ddependencies for the system
 RUN pacman -Syu --noconfirm && \
     pacman -S --noconfirm \
     glibc \
@@ -61,6 +61,8 @@ COPY config.json /tmp/config.json
 COPY repos.json /tmp/repos.json
 COPY EnvResources/container-scripts/install_optional.sh /tmp/install_optional.sh
 COPY EnvResources/container-scripts/clone_repos.sh /tmp/clone_repos.sh
+COPY EnvResources/Presets/* /tmp/presets/
+COPY custom.json /tmp/presets/custom.json
 COPY EnvResources/fish-starship.fish /etc/fish/conf.d/starship.fish
 COPY EnvResources/starship.toml /etc/starship/starship.toml
 
