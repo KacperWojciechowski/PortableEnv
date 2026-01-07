@@ -9,3 +9,7 @@ A Docker-based virtual environment made with Arch image for C, C++ and Rust deve
 2. Run ./setup.sh
 3. Run ./run.sh
 4. Enjoy!
+
+In order to attach to an already running container, call `./attach.sh`.
+> __IMPORTANT__: Be careful when you run multiple terminals in the same container. If you close the 'root' terminal that started the container, it will kill the container and subsequently disconnect all the other terminals from it.
+> __NOTE__: Make sure you have Unicode-compliant font to enable the fish terminal to display symbols instead of rectangles. Example fonts are `Fira Code` and `Cascadia Code`.
