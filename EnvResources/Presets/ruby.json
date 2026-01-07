@@ -1,7 +1,0 @@
-{
-	"packages": [
-		"ruby-bundler",
-		"minitest",
-		"rails"
-	]
-}

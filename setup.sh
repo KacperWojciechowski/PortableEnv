@@ -26,7 +26,6 @@ echo "Building Docker image '$IMAGE_NAME' from $DOCKERFILE_PATH..."
 DOCKER_BUILDKIT=1 docker build \
 	-t "$IMAGE_NAME" \
 	-f "$DOCKERFILE_PATH" \
-	--ssh default \
 	"$CONTEXT_DIR"
 echo "Docker image '$IMAGE_NAME' built successfully."
 
