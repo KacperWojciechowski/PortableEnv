@@ -1,14 +1,6 @@
 #!/usr/bin/env bash
 set -e
 
-if [[ $# -lt 1 || -z "$1" ]]; then
-	echo "ERROR: GIT_USER not provided - GitHub user name required, in order to support initial repo cloning"
-	echo "Usage: ./setup.sh <github-username>"
-	exit 1
-fi
-
-GIT_USER="$1"
-
 VOLUME_NAME="dev_workspace"
 IMAGE_NAME="dev-arch"
 DOCKERFILE_PATH="./EnvResources/Dockerfile"
@@ -32,12 +24,11 @@ echo "Building Docker image '$IMAGE_NAME' from $DOCKERFILE_PATH..."
 
 # Temporarily forward ssh to allow for cloning during image build
 DOCKER_BUILDKIT=1 docker build \
-	--build-arg GIT_USER="$GIT_USER" \
-	--ssh default \
 	-t "$IMAGE_NAME" \
 	-f "$DOCKERFILE_PATH" \
+	--ssh default \
 	"$CONTEXT_DIR"
 echo "Docker image '$IMAGE_NAME' built successfully."
 
 echo "Setup complete. Volume: $VOLUME_NAME | Image: $IMAGE_NAME"
-echo "Run with ./run.sh on Linux or ./run.ps1 on Windows"
+echo "Run with ./run.sh"
